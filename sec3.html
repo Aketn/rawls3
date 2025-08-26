@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>§3 鍵入力（正義の理論の中心理念）</title>
+  <style>
+    :root { --brand:#0f62fe; --ok:#0a7f2e; --ng:#b00020; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; margin: 2rem; }
+    .card { max-width: 760px; margin: 0 auto; padding: 1.5rem; border: 1px solid #e5e5e5; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.04);} 
+    h1 { font-size: 1.25rem; margin: 0 0 .25rem; }
+    .sub { color: #555; margin: 0 0 1rem; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: .75rem; }
+    @media (min-width: 680px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .field { border: 1px solid #ddd; border-radius: 10px; padding: .75rem; }
+    label { display: block; font-weight: 600; font-size: .95rem; }
+    input[type="text"] { width: 100%; margin-top: .4rem; padding: .6rem .7rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+    .hint { font-size: .85rem; color: #666; margin-top: .35rem; }
+    .ok { color: var(--ok); font-weight: 700; }
+    .ng { color: var(--ng); }
+    .muted { color: #777; }
+    .meta { display:flex; gap:.5rem; align-items:center; margin:.75rem 0 0; font-size:.9rem; }
+    progress { width: 180px; height: 12px; }
+    .actions { margin-top: 1rem; display:flex; flex-wrap:wrap; gap:.5rem; }
+    button { padding: .65rem 1rem; font-size: 1rem; border: 0; border-radius: 8px; background: var(--brand); color: #fff; cursor: pointer; }
+    button.secondary { background: #eceff4; color: #333; }
+    .next { display: none; margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem; }
+    a.cta { color: #fff; background: var(--ok); padding: .6rem 1rem; border-radius: 8px; text-decoration: none; }
+  </style>
+  <!-- 外部依存なし（フォント/JS等の外部読み込みは行わない） -->
+  <meta name="robots" content="noindex" />
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="§3 鍵入力ページ：5〜7語のキーワードを全一致でクイズを解錠" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <div class="card">
+    <h1>§3 鍵入力（正義の理論の中心理念）</h1>
+    <p class="sub">穴埋めPDF（§3）で出てきたキーワードを入力して解錠します。7/7でクイズへ。</p>
+
+    <div class="meta">
+      <div>進捗: <span id="count">0</span>/7 正解</div>
+      <progress id="bar" max="7" value="0"></progress>
+      <div id="allmsg" class="muted"></div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="actions">
+      <button id="check">確認する</button>
+      <button id="clear" class="secondary">入力をクリア</button>
+      <button id="save" class="secondary">下書き保存</button>
+    </div>
+
+    <div id="next" class="next">
+      <p class="ok">解錠OK！ §3のクイズへ進めます。</p>
+      <p><a id="quizLink" class="cta" href="#" target="_blank" rel="noopener">クイズを開く</a></p>
+    </div>
+  </div>
+
+  <script>
+    // クイズURL（指定に基づき設定）
+    const QUIZ_URL = "https://g.co/gemini/share/2c08eda6deb3";
+
+    // 受理配列は日本語主要形 + 英語/読みの正規化形（lower/半角/記号除去）
+    const KEYS = [
+      { id: "k1", label: "ロールズの立場は『＿＿＿＿＿＿＿＿』と呼ばれる（英: justice as fairness）", accepts: ["公正としての正義","justiceasfairness","kouseitoshitenoseigi","jasf"], placeholder:"" },
+      { id: "k2", label: "契約の思考実験『＿＿＿＿＿＿』", accepts: ["原初状態","originalposition","genshojoutai"], placeholder:"" },
+      { id: "k3", label: "原初状態で被る『＿＿＿＿＿＿』", accepts: ["無知のヴェール","無知のベール","veilofignorance","ignoranceveil","muchinoveil"], placeholder:"" },
+      { id: "k4", label: "正義論で前提とされる主体『＿＿＿＿＿＿』", accepts: ["道徳的人格","moralperson","moralpersons","doutokutekijinkaku"], placeholder:"" },
+      { id: "k5", label: "原初状態が導く『＿＿＿＿＿＿』", accepts: ["第一原理群","firstprinciples","thefirstprinciples","daiichigenrigun"], placeholder:"" },
+      { id: "k6", label: "原初状態で諸個人がもつ決定基準『＿＿＿＿』", accepts: ["合理性","rationality","gourisei","gorisei"], placeholder:"" },
+      { id: "k7", label: "公共性・相互承認に関わる基準『＿＿＿＿』", accepts: ["道理性","reasonableness","dourisei"], placeholder:"" },
+    ];
+
+    function toHalfWidth(str){
+      return str
+        .replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+        .replace(/　/g, " ");
+    }
+    function normalize(s){
+      if(!s) return "";
+      const half = toHalfWidth(s).toLowerCase();
+      return half.replace(/[\s、。.,;:!"'\-—_()\[\]{}<>?\/\\|]/g, "");
+    }
+
+    function loadDraft(){
+      try{
+        const raw = localStorage.getItem("sec3_keys");
+        return raw ? JSON.parse(raw) : {};
+      }catch{ return {}; }
+    }
+    function saveDraft(values){
+      try{ localStorage.setItem("sec3_keys", JSON.stringify(values)); }catch{}
+    }
+    function clearDraft(){
+      try{ localStorage.removeItem("sec3_keys"); }catch{}
+    }
+
+    const grid = document.getElementById("grid");
+    const draft = loadDraft();
+    KEYS.forEach(k => {
+      const d = document.createElement("div");
+      d.className = "field";
+      d.innerHTML = `<label for="${k.id}">${k.label}</label><input id="${k.id}" type="text" placeholder="${k.placeholder}" /><div id="${k.id}-msg" class="muted"></div>`;
+      grid.appendChild(d);
+      if(draft[k.id]) document.getElementById(k.id).value = draft[k.id];
+    });
+
+    function validate(){
+      let ok = 0; const values = {};
+      KEYS.forEach(k => {
+        const v = document.getElementById(k.id).value; values[k.id] = v;
+        const n = normalize(v);
+        const isOk = k.accepts.some(a => n === normalize(a));
+        const msg = document.getElementById(`${k.id}-msg`);
+        if(!v){ msg.textContent = ""; msg.className = "muted"; return; }
+        if(isOk){ ok++; msg.textContent = "OK"; msg.className = "ok"; }
+        else { msg.textContent = "未一致"; msg.className = "ng"; }
+      });
+      document.getElementById("count").textContent = ok;
+      document.getElementById("bar").value = ok;
+      const all = document.getElementById("allmsg");
+      if(ok === KEYS.length){
+        all.textContent = "全問一致。解錠可能です。"; all.className = "ok";
+        document.getElementById("next").style.display = "block";
+        document.getElementById("quizLink").href = QUIZ_URL;
+      } else {
+        all.textContent = `全問一致で解錠（現在: ${ok}/${KEYS.length}）`;
+        all.className = "muted";
+        document.getElementById("next").style.display = "none";
+      }
+      return values;
+    }
+
+    document.getElementById("check").addEventListener("click", () => {
+      const values = validate();
+      saveDraft(values);
+    });
+    document.getElementById("save").addEventListener("click", () => {
+      const v = {}; KEYS.forEach(k => v[k.id] = document.getElementById(k.id).value);
+      saveDraft(v); alert("下書きを保存しました。");
+    });
+    document.getElementById("clear").addEventListener("click", () => {
+      KEYS.forEach(k => document.getElementById(k.id).value = "");
+      document.getElementById("next").style.display = "none";
+      document.getElementById("count").textContent = "0";
+      document.getElementById("bar").value = 0;
+      document.getElementById("allmsg").textContent = "";
+      clearDraft();
+      KEYS.forEach(k => { const m = document.getElementById(`${k.id}-msg`); m.textContent = ""; m.className = "muted"; });
+    });
+
+    // Enterで次のフィールドへ/最後は検証＆保存
+    KEYS.forEach((k, i) => {
+      const el = document.getElementById(k.id);
+      el.addEventListener("keydown", e => {
+        if(e.key === "Enter"){
+          if(i < KEYS.length - 1){
+            document.getElementById(KEYS[i+1].id).focus();
+          } else {
+            const values = validate();
+            saveDraft(values);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
