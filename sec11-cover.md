@@ -12,8 +12,8 @@
 
 鍵ページ
 
-- URL: <https://aketn.github.io/Aketn/rawls3/sec11.html>
+- URL: <https://aketn.github.io/rawls3/sec11.html>
 
 QRコード（鍵ページURL）
 
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://aketn.github.io/Aketn/rawls3/sec11.html" width="240" alt="QR: https://aketn.github.io/Aketn/rawls3/sec11.html" />
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https://aketn.github.io/rawls3/sec11.html" width="240" alt="QR: https://aketn.github.io/rawls3/sec11.html" />
