@@ -10,7 +10,7 @@
 - クイズURL（本番）
 - セクション番号/タイトル（例: §2 正義の主題）
 - 出力先パス（例: `正義論パッケージ案/keys-pages/sec2.html`）
-- 鍵ページURLベース（省略時は `https://aketn.github.io/Aketn/rawls3/` を既定とし、出力ファイル名を後ろに連結して完全URLを作る）
+- 鍵ページURLベース（省略時は `https://aketn.github.io/rawls3/` を既定とし、出力ファイル名を後ろに連結して完全URLを作る）
 - 印刷用MDの出力先パス（例: `正義論パッケージ案/keys-pages/sec2-cover.md`）
 
 ## モデルへの指示（Copilotにコピペ）
@@ -40,7 +40,7 @@
 	- 出力先パス: 私が指定した `keys-pages/` 配下（例: `正義論パッケージ案/keys-pages/sec2.html`）。
 	- 既存の場合は上書き保存。生成後にそのファイルをエディタで開く。
 	- 併せて、印刷用のMarkdownカバーページを作成する（例: `正義論パッケージ案/keys-pages/sec2-cover.md`）。
-	- 鍵ページURLは「`<鍵ページURLベース>` + 出力ファイル名」で構成する。`<鍵ページURLベース>`が未指定の場合は `https://aketn.github.io/Aketn/rawls3/` を用いる。
+	- 鍵ページURLは「`<鍵ページURLベース>` + 出力ファイル名」で構成する。`<鍵ページURLベース>`が未指定の場合は `https://aketn.github.io/rawls3/` を用いる。
 
 1. 印刷用カバーページ（Markdown）の生成
 
@@ -78,7 +78,7 @@
 - セクション: §2 正義の主題
 - クイズURL: <https://example.com/quiz/rawls/section2>
 - 出力先: 正義論パッケージ案/keys-pages/sec2.html
-- 鍵ページURLベース: <https://aketn.github.io/Aketn/rawls3/>
+- 鍵ページURLベース: <https://aketn.github.io/rawls3/>
 - 印刷用MD出力先: 正義論パッケージ案/keys-pages/sec2-cover.md
 - 添付: そのセクションのTex/MD本文
 - 実行プロンプト: 上の「モデルへの指示」をコピペし、上記を明示して渡す
