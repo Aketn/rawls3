@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>§16 鍵入力（関連する社会的地位）</title>
+  <style>
+    :root { --brand:#0f62fe; --ok:#0a7f2e; --ng:#b00020; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; margin: 2rem; }
+    .card { max-width: 760px; margin: 0 auto; padding: 1.5rem; border: 1px solid #e5e5e5; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.04);} 
+    h1 { font-size: 1.25rem; margin: 0 0 .25rem; }
+    .sub { color: #555; margin: 0 0 1rem; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: .75rem; }
+    @media (min-width: 680px) { .grid { grid-template-columns: 1fr 1fr; } }
+    .field { border: 1px solid #ddd; border-radius: 10px; padding: .75rem; }
+    label { display: block; font-weight: 600; font-size: .95rem; }
+    input[type="text"] { width: 100%; margin-top: .4rem; padding: .6rem .7rem; font-size: 1rem; border: 1px solid #ccc; border-radius: 8px; }
+    .ok { color: var(--ok); font-weight: 700; }
+    .ng { color: var(--ng); }
+    .muted { color: #777; }
+    .meta { display:flex; gap:.5rem; align-items:center; margin:.75rem 0 0; font-size:.9rem; }
+    progress { width: 180px; height: 12px; }
+    .actions { margin-top: 1rem; display:flex; flex-wrap:wrap; gap:.5rem; }
+    button { padding: .65rem 1rem; font-size: 1rem; border: 0; border-radius: 8px; background: var(--brand); color: #fff; cursor: pointer; }
+    button.secondary { background: #eceff4; color: #333; }
+    .next { display: none; margin-top: 1rem; border-top: 1px solid #eee; padding-top: 1rem; }
+    a.cta { color: #fff; background: var(--ok); padding: .6rem 1rem; border-radius: 8px; text-decoration: none; }
+  </style>
+  <meta name="robots" content="noindex" />
+  <meta name="color-scheme" content="light" />
+  <meta name="description" content="§16 鍵入力ページ：7語のキーワードを全一致でクイズを解錠" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="icon" href="data:,">
+  <!-- 外部依存なし -->
+  <!-- §16 関連する社会的地位：鍵ページ -->
+  <script>
+    // クイズURL（指定）
+    const QUIZ_URL = "https://g.co/gemini/share/c629a6b92b84";
+
+    // 入力正規化：全角→半角／小文字化／空白・記号除去
+    function toHalfWidth(str){
+      return str
+        .replace(/[！-～]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+        .replace(/　/g, " ");
+    }
+    function normalize(s){
+      if(!s) return "";
+      const half = toHalfWidth(s).toLowerCase();
+      return half.replace(/[\s、。.,;:!"'\-—_()\[\]{}<>?\/\\|・]/g, "");
+    }
+
+    // 受理語（日本語主要形＋英語/読みの正規化形）
+    const KEYS = [
+      { id: "k1", label: "関連する二つの地位のうち一つは『＿＿＿＿＿＿＿＿＿＿＿＿＿＿』である。", accepts: [
+        "対等な市民としての暮らし",
+        "対等な市民",
+        "statusofequalscitizenship",
+        "equalcitizenlife",
+        "taitonashimintoshitenokurashi",
+        "taitonashimin"
+      ], placeholder: "" },
+      { id: "k2", label: "もう一つの関連地位は『＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿』である。", accepts: [
+        "所得および富が分配された境遇によって規定される地位",
+        "所得および富が分配された境遇",
+        "所得および富",
+        "astatusdefinedbythedistributionofincomeandwealth",
+        "distributionofincomeandwealthstatus",
+        "shotokuoyobitomigabunpaisaretakyouguuniyottekiteisareruchi",
+        "shotokuoyobitomi"
+      ], placeholder: "" },
+      { id: "k3", label: "正義の二原理が適用される主要対象は『＿＿＿＿＿＿』である。", accepts: [
+        "基礎構造",
+        "基本構造",
+        "basicstructure",
+        "kisokouzou",
+        "kihonkouzou"
+      ], placeholder: "" },
+      { id: "k4", label: "公共目的の評価に用いられる原理は『＿＿＿＿＿＿＿＿＿＿』である。", accepts: [
+        "共通の利益の原理",
+        "共通の利益",
+        "principleofcommoninterest",
+        "commoninterestprinciple"
+      ], placeholder: "" },
+      { id: "k5", label: "最も不遇な人びとを選出する基準は『＿＿＿＿＿＿＿＿＿＿＿＿』である。", accepts: [
+        "三種類の主要な偶発性",
+        "主要な偶発性",
+        "threekindsofmajorcontingencies",
+        "majorcontingencies",
+        "sanshurui noshuyou naguu hatsusei",
+        "syuyounaguuhatsusei"
+      ], placeholder: "" },
+      { id: "k6", label: "主要な偶発性の一つは『＿＿＿＿＿＿＿＿＿＿＿＿＿＿』である。", accepts: [
+        "生まれ落ちた家族および階級",
+        "生まれ落ちた家族と階級",
+        "familyandclassofbirth",
+        "familyclassofbirth",
+        "umareochitakazokuoyobikaikyuu"
+      ], placeholder: "" },
+      { id: "k7", label: "主要な偶発性の一つは『＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿』である。", accepts: [
+        "人生行路における運やめぐり合わせ",
+        "運やめぐり合わせ",
+        "luckandfortuneinlifecourse",
+        "luckandchanceinlife",
+        "jinseikoroniokeruunyameguriawase"
+      ], placeholder: "" }
+    ];
+
+    function loadDraft(){ try{ const raw = localStorage.getItem("sec16_keys"); return raw ? JSON.parse(raw) : {}; }catch{ return {}; } }
+    function saveDraft(values){ try{ localStorage.setItem("sec16_keys", JSON.stringify(values)); }catch{} }
+    function clearDraft(){ try{ localStorage.removeItem("sec16_keys"); }catch{} }
+
+    function build(){
+      const grid = document.getElementById("grid");
+      const draft = loadDraft();
+      KEYS.forEach(k => {
+        const d = document.createElement("div"); d.className = "field";
+        d.innerHTML = `<label for="${k.id}">${k.label}</label><input id="${k.id}" type="text" placeholder="${k.placeholder}" /><div id="${k.id}-msg" class="muted"></div>`;
+        grid.appendChild(d);
+        if(draft[k.id]) document.getElementById(k.id).value = draft[k.id];
+      });
+    }
+
+    function validate(){
+      let ok = 0; const values = {};
+      KEYS.forEach(k => {
+        const v = document.getElementById(k.id).value; values[k.id] = v;
+        const n = normalize(v);
+        const isOk = k.accepts.some(a => n === normalize(a));
+        const msg = document.getElementById(`${k.id}-msg`);
+        if(!v){ msg.textContent = ""; msg.className = "muted"; return; }
+        if(isOk){ ok++; msg.textContent = "OK"; msg.className = "ok"; }
+        else { msg.textContent = "未一致"; msg.className = "ng"; }
+      });
+      document.getElementById("count").textContent = ok; document.getElementById("bar").value = ok;
+      const all = document.getElementById("allmsg");
+      if(ok === KEYS.length){ all.textContent = "全問一致。解錠可能です。"; all.className = "ok"; document.getElementById("next").style.display = "block"; document.getElementById("quizLink").href = QUIZ_URL; }
+      else { all.textContent = `全問一致で解錠（現在: ${ok}/${KEYS.length}）`; all.className = "muted"; document.getElementById("next").style.display = "none"; }
+      return values;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      build();
+      document.getElementById("check").addEventListener("click", () => { const values = validate(); saveDraft(values); });
+      document.getElementById("save").addEventListener("click", () => { const v = {}; KEYS.forEach(k => v[k.id] = document.getElementById(k.id).value); saveDraft(v); alert("下書きを保存しました。"); });
+      document.getElementById("clear").addEventListener("click", () => {
+        KEYS.forEach(k => document.getElementById(k.id).value = "");
+        document.getElementById("next").style.display = "none"; document.getElementById("count").textContent = "0"; document.getElementById("bar").value = 0; document.getElementById("allmsg").textContent = ""; clearDraft();
+        KEYS.forEach(k => { const m = document.getElementById(`${k.id}-msg`); m.textContent = ""; m.className = "muted"; });
+      });
+
+      KEYS.forEach((k, i) => {
+        const el = document.getElementById(k.id);
+        el.addEventListener("keydown", e => {
+          if(e.key === "Enter"){
+            if(i < KEYS.length - 1){ document.getElementById(KEYS[i+1].id).focus(); }
+            else { const values = validate(); saveDraft(values); }
+          }
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="card">
+    <h1>§16 鍵入力（関連する社会的地位）</h1>
+    <p class="sub">穴埋めPDF（§16）で出てきたキーワードを入力して解錠します。7/7でクイズへ。</p>
+
+    <div class="meta">
+      <div>進捗: <span id="count">0</span>/7 正解</div>
+      <progress id="bar" max="7" value="0"></progress>
+      <div id="allmsg" class="muted"></div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="actions">
+      <button id="check">確認する</button>
+      <button id="clear" class="secondary">入力をクリア</button>
+      <button id="save" class="secondary">下書き保存</button>
+    </div>
+
+    <div id="next" class="next">
+      <p class="ok">解錠OK！ §16のクイズへ進めます。</p>
+      <p><a id="quizLink" class="cta" href="#" target="_blank" rel="noopener">クイズを開く</a></p>
+    </div>
+  </div>
+</body>
+</html>
